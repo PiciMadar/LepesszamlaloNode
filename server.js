@@ -2,10 +2,12 @@ const express= require('express');
 const fs = require('fs');
 const path = require('path');
 const { json } = require('stream/consumers');
+var cors = require('cors')
 
 const app = express()
 
 // Middleware-ek V
+app.use(cors())
 app.use(express.json()) // json megkövetelése
 app.use(express.urlencoded({extended: true})) //req body-n átküldjük az adatokat
 
@@ -37,17 +39,22 @@ app.get('/users/:id',(req,res)=>{
         {
            return res.send(users[idx].name+", "+users[idx].age);
         }
-        return res.send('Nincs ilyen felhasznalo');
+        return res.status(400).send( {msg: 'Nincs ilyen felhasznalo'});
 })
 
 //Post new user
 
 app.post('/users', (req, res) => {
     let data = req.body;
+
+    if(DoesEmailExists(data.email)){
+        return res.status(400).send({msg:'Ez az email cím már regisztrálva van'})
+    }
+
     data.id  = getNextID()
     users.push(data)
     saveUsers();
-    res.send(users);  
+    res.status(200).send({msg:"A felhasználó regisztrálva"});  
 })
 
 app.patch('/users/:id', (req,res) => {
@@ -60,7 +67,7 @@ app.patch('/users/:id', (req,res) => {
         saveUsers()
         return res.send("Modosítva")
     }
-    return res.send("Nem lett semmi se módosítva")
+    return res.status(400).send({msg:"Nem lett semmi se módosítva"})
 })
 
 app.delete('/users/:id', (req,res) => {
@@ -69,9 +76,9 @@ app.delete('/users/:id', (req,res) => {
     if (idx > -1){
         users.splice(idx, 1);
         saveUsers();
-        return res.send("A felhasználó törölve lett")
+        return res.send({msg:"A felhasználó törölve lett"})
     }
-    return res.send("Nincs ilyen felhasználó")
+    return res.status(400).send({msg:"Nincs ilyen felhasználó"})
 });
 
 app.listen(3000)
@@ -108,4 +115,15 @@ function loadUsers(){
 
 function saveUsers(){
     fs.writeFileSync(USER_FILE, JSON.stringify(users));
+}
+
+function DoesEmailExists(email){
+    let exists = false;
+    users.forEach(user =>{
+        if(user.email == email){
+            exists = true
+            return
+        }
+    })
+    return exists;
 }
