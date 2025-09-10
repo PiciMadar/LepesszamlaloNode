@@ -1,1 +1,15 @@
-[]
+[
+    {
+        "name": "AAAAAAAAAAAAAAAAA",
+        "email": "AAAA@BBBB.CCCC",
+        "password": "Cisco123",
+        "id": 1
+    },
+    {
+        "name": "admin",
+        "email": "admin",
+        "password": "admin",
+        "id": 2
+    }
+
+]

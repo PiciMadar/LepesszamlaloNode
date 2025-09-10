@@ -17,6 +17,7 @@ let users=[
 
 const USER_FILE = path.join(__dirname, 'users.json')
 
+//ENDPOINTS
 loadUsers();
 
 
@@ -55,6 +56,19 @@ app.post('/users', (req, res) => {
     users.push(data)
     saveUsers();
     res.status(200).send({msg:"A felhasználó regisztrálva"});  
+})
+
+//POST logged user
+app.post('/users/login',(req,res) => {
+    let {email,password} = req.body;
+    let loggeduser = {}
+    users.forEach(user =>{
+        if(user.email == email && user.password == password){
+            loggeduser = user;
+            return
+        }
+    })
+    res.send(loggeduser)    ;
 })
 
 app.patch('/users/:id', (req,res) => {
@@ -127,3 +141,4 @@ function DoesEmailExists(email){
     })
     return exists;
 }
+
