@@ -2,7 +2,8 @@ const express= require('express');
 const fs = require('fs');
 const path = require('path');
 const { json } = require('stream/consumers');
-var cors = require('cors')
+var cors = require('cors');
+const { send } = require('process');
 
 const app = express()
 
@@ -11,15 +12,15 @@ app.use(cors())
 app.use(express.json()) // json megkövetelése
 app.use(express.urlencoded({extended: true})) //req body-n átküldjük az adatokat
 
-let users=[
-
-];
+let users=[];
+let steps = []
 
 const USER_FILE = path.join(__dirname, 'users.json')
+const STEPS_FILE = path.join(__dirname, 'steps.json')
 
 //ENDPOINTS
 loadUsers();
-
+loadSteps();
 
 
 
@@ -71,6 +72,50 @@ app.post('/users/login',(req,res) => {
     res.send(loggeduser)    ;
 })
 
+//update user profile
+app.patch('/users/profile/:id', (req,res) =>{
+    let {id,name,email} = req.body;
+
+    id = Number(id)
+
+    let idx = users.findIndex(user => {user.email == email && user.id != id})
+    if(idx > -1){
+        return res.status(400).send({ msg : 'Ez az e-mail cím már foglalt!' })
+    }
+
+    idx = users.findIndex(user => user.id == id)
+
+    if(idx == -1){
+        return res.status(400).send({msg:"Nem található felhasználó"})
+    }
+
+    users[idx].name = name;
+    users[idx].email = email;
+    saveUsers();
+
+    return res.send({msg: 'A profil módosítva!'})
+})
+
+//update user password
+app.patch('/users/passmod/:id', (req,res) =>{
+    let(id,oldpass,newpass) = req.body
+
+    id = Number(id)
+    let idx = users.findIndex(user => user.id == id);
+    if(idx == -1){
+        return res.status(400).send({msg:"Nem található felhasználó"})
+    }
+    if(users[idx].password != oldpass){
+        return res.status(400).send({msg:"Nem megfelelő jelszó"})
+    }
+
+    users[idx].password = newpass;
+    saveUsers();
+
+    return res.send({msg: "A jelszó sikeresen módosítva!"})
+})
+
+//update user by id
 app.patch('/users/:id', (req,res) => {
     let id = req.params.id;
     let data = req.body;
@@ -84,6 +129,8 @@ app.patch('/users/:id', (req,res) => {
     return res.status(400).send({msg:"Nem lett semmi se módosítva"})
 })
 
+
+
 app.delete('/users/:id', (req,res) => {
     let id = req.params.id;
     let idx = users.findIndex(user => user.id == id)
@@ -94,6 +141,57 @@ app.delete('/users/:id', (req,res) => {
     }
     return res.status(400).send({msg:"Nincs ilyen felhasználó"})
 });
+
+
+//get user by id
+app.get('/users/:id', (req,res) => {
+    let id = req.params.id;
+    let idx = users.findIndex(user => user.id == id)
+    if (idx > -1){
+        return res.send(users[idx])
+    }
+    return res.status(400).send({msg:"Nincs ilyen felhasználó"})
+});
+
+//-------------STEPS---------------
+
+
+//Get all steps by userid
+app.get('/steps', (req,res) =>{
+    res.send(steps)
+})
+
+//Get one step by userid
+app.get('/steps/:id', (req,res) =>{
+    let id = req.params.id;
+    let idx = steps.findIndex(step => step.id == id)
+    if(idx > -1){
+        return res.send(steps[idx])
+    }
+    return res.status(400).send({msg:"Nincs ilyen ID-jű lépés"})
+})
+
+
+
+//Post new step
+app.post('/steps', (req,res) =>{
+    let data = req.body;
+    data.id = getNextStepID()
+    data.uid = 1
+    steps.push(data)
+    saveSteps();
+    res.status(200).send({msg:"A lépésszám felvéve"});  
+})
+
+//Patch step by userid
+
+
+//Delete step by userid
+
+
+//Delete all steps by userid
+
+//----------------------------------
 
 app.listen(3000)
 
@@ -111,6 +209,20 @@ function getNextID(){
     return users[maxindex].id + 1;
 }
 
+function getNextStepID(){
+    let nextID = 1
+    if(steps.length == 0){
+        return nextID
+    }
+    let maxindex = 0
+    for(let i = 0; i< steps.length; i++){
+        if(steps[i].id > steps[maxindex].id){
+            maxindex = i;
+        }
+    }
+    return steps[maxindex].id + 1;
+}
+
 
 function loadUsers(){
     if(fs.existsSync(USER_FILE)){
@@ -125,6 +237,25 @@ function loadUsers(){
     else{
         saveUsers();
     }
+}
+
+
+function loadSteps(){
+    if(fs.existsSync(STEPS_FILE)){
+        const raw = fs.readFileSync(STEPS_FILE)
+        try{
+            steps = JSON.parse(raw)
+        } catch(err) {
+            console.log("Hiba a lépések beolvasása során! \n", err)
+            steps = []
+        }
+    }
+    else{
+        saveSteps();
+    }
+}
+function saveSteps(){
+    fs.writeFileSync(STEPS_FILE, JSON.stringify(steps))
 }
 
 function saveUsers(){

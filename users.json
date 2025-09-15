@@ -1,15 +1,1 @@
-[
-    {
-        "name": "AAAAAAAAAAAAAAAAA",
-        "email": "AAAA@BBBB.CCCC",
-        "password": "Cisco123",
-        "id": 1
-    },
-    {
-        "name": "admin",
-        "email": "admin",
-        "password": "admin",
-        "id": 2
-    }
-
-]
+[{"name":"TESZT0","email":"teszt@teszt.com","password":"Teszt0100","id":1},{"name":"Aladár","email":"ALDR@email.com","password":"nemTitkos","id":2}]

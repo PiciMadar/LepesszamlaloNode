@@ -8,9 +8,28 @@ Content-Type: application/json
 GET http://localhost:3000/users
 Content-Type: application/json
 
+### GET steps
+GET http://localhost:3000/steps
+Content-Type: application/json
+
+
+### GET step x
+GET http://localhost:3000/steps/4
+Content-Type: application/json
+
+
+### POST steps
+POST http://localhost:3000/steps
+Content-Type: application/json
+
+{
+    "date" : "1994-03-11",
+    "count" : "4323"
+}
+
 
 ### GET users/x
-GET http://localhost:3000/users/0
+GET http://localhost:3000/users/1
 Content-Type: application/json
 
 
