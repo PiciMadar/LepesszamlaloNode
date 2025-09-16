@@ -171,8 +171,6 @@ app.get('/steps/:id', (req,res) =>{
     return res.status(400).send({msg:"Nincs ilyen ID-jű lépés"})
 })
 
-
-
 //Post new step
 app.post('/steps', (req,res) =>{
     let data = req.body;
@@ -184,13 +182,59 @@ app.post('/steps', (req,res) =>{
 })
 
 //Patch step by userid
+app.patch('/steps/:id', (req, res)=>{
+    let id = req.params.id;
+    let data = req.body;
 
+    let idx = steps.findIndex(step => step.id == id);
+
+    if (idx > -1) {
+        steps[idx] = data;
+        steps[idx].id = Number(id);
+        saveSteps();
+        return res.send({msg: 'A lépésadat sikeresen módosítva'});
+    }
+    return res.status(400).send({msg:'Nincs ilyen lépésadat!'});
+});
 
 //Delete step by userid
+app.delete('/steps/:id', (req, res)=>{
+    let id = req.params.id;
+    let idx = steps.findIndex(step => step.id == id);
 
+    if (idx == -1){
+        res.status(400).send({msg: 'Nincs ilyen lépésadat!'});
+        return
+    }
+
+    steps.splice(idx, 1);
+    saveSteps();
+    res.send({msg: 'Lépésadat sikeresen törölve!'});
+ });
 
 //Delete all steps by userid
+app.delete('/steps/user/:uid', (req, res)=>{
+    let userId = req.params.uid;
+    let idx = users.findIndex(user => user.id == userId);
 
+    if (idx == -1){
+        res.status(400).send({msg: 'Nincs ilyen felhasználó!'});
+        return
+    }
+    
+    steps = steps.filter( step => step.userId != userId);
+    saveSteps();
+    res.send({msg: 'Lépésadatok sikeresen törölve!'});
+ });
+
+
+ 
+// DELETE all steps of users
+app.delete('/steps', (req, res)=>{
+    steps = [];
+    saveSteps();
+    res.send({msg: 'Az összes lépésadat sikeresen törölve!'});
+}); 
 //----------------------------------
 
 app.listen(3000)
